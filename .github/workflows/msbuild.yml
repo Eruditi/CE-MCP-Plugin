@@ -47,22 +47,53 @@ jobs:
         msbuild-architecture: ${{ env.BUILD_PLATFORM }}
 
     - name: Download Lua 5.3 libraries
+      shell: pwsh
       run: |
-        if not exist libs mkdir libs
-        # Download Lua 5.3.6 Win32 static library
-        curl -L -o lua53-win32.zip "https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win32_lib.zip/download"
-        # Download Lua 5.3.6 x64 static library
-        curl -L -o lua53-x64.zip "https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win64_lib.zip/download"
-        # Extract libraries
-        powershell -Command "Expand-Archive -Path lua53-win32.zip -DestinationPath lua53-win32 -Force"
-        powershell -Command "Expand-Archive -Path lua53-x64.zip -DestinationPath lua53-x64 -Force"
-        # Copy and rename Win32 library
-        copy lua53-win32\lib\lua53.lib libs\lua53-32.lib
-        # Copy and rename x64 library
-        copy lua53-x64\lib\lua53.lib libs\lua53-64.lib
-        # Verify files exist
-        dir libs
-      shell: cmd
+        $workspace = $env:GITHUB_WORKSPACE
+        $libsDir = Join-Path $workspace 'libs'
+        if (-not (Test-Path $libsDir)) { New-Item -ItemType Directory -Path $libsDir | Out-Null }
+
+        $tmp = Join-Path $env:RUNNER_TEMP 'lua53'
+        if (-not (Test-Path $tmp)) { New-Item -ItemType Directory -Path $tmp | Out-Null }
+
+        $win32Zip = Join-Path $tmp 'lua53-win32.zip'
+        $x64Zip   = Join-Path $tmp 'lua53-x64.zip'
+
+        Write-Host 'Downloading Lua 5.3.6 Win32...'
+        Invoke-WebRequest -Uri 'https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win32_lib.zip/download' -OutFile $win32Zip -UseBasicParsing
+        Write-Host 'Downloading Lua 5.3.6 x64...'
+        Invoke-WebRequest -Uri 'https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win64_lib.zip/download' -OutFile $x64Zip -UseBasicParsing
+
+        # Basic validation of downloaded files
+        function Test-IsZip($path) {
+          try {
+            $fs = [System.IO.File]::OpenRead($path)
+            $br = New-Object System.IO.BinaryReader($fs)
+            $sig = [System.BitConverter]::ToString($br.ReadBytes(4))
+            $br.Close(); $fs.Close()
+            return $sig -eq '50-4B-03-04'  # PK.. local file header signature
+          } catch {
+            return $false
+          }
+        }
+
+        if (-not (Test-IsZip $win32Zip)) { Write-Error "Downloaded Win32 archive is not a ZIP (path: $win32Zip)"; exit 1 }
+        if (-not (Test-IsZip $x64Zip))   { Write-Error "Downloaded x64 archive is not a ZIP (path: $x64Zip)"; exit 1 }
+
+        Expand-Archive -Path $win32Zip -DestinationPath (Join-Path $tmp 'lua53-win32') -Force
+        Expand-Archive -Path $x64Zip -DestinationPath (Join-Path $tmp 'lua53-x64') -Force
+
+        $win32Lib = Join-Path (Join-Path $tmp 'lua53-win32') 'lib\lua53.lib'
+        $x64Lib   = Join-Path (Join-Path $tmp 'lua53-x64') 'lib\lua53.lib'
+
+        if (-not (Test-Path $win32Lib)) { Write-Error "Expected Win32 .lib not found at $win32Lib"; exit 1 }
+        if (-not (Test-Path $x64Lib))   { Write-Error "Expected x64 .lib not found at $x64Lib"; exit 1 }
+
+        Copy-Item -Path $win32Lib -Destination (Join-Path $libsDir 'lua53-32.lib') -Force
+        Copy-Item -Path $x64Lib   -Destination (Join-Path $libsDir 'lua53-64.lib') -Force
+
+        Write-Host 'libs content:'
+        Get-ChildItem -Path $libsDir -Force | Format-Table Name,Length
 
     - name: Build solution
       run: msbuild ${{ env.SOLUTION_FILE_PATH }} /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform=${{ env.BUILD_PLATFORM }} /p:BuildProjectReferences=true /p:RestorePackagesConfig=true /verbosity:minimal
