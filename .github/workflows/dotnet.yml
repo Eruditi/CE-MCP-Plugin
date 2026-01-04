@@ -9,13 +9,13 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest  # 必须使用Windows环境编译.NET Framework项目
+    runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4  # 更新到v4
     
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1  # 使用Microsoft官方的MSBuild设置
+    - name: Setup .NET Framework 4.7.2
+      uses: microsoft/setup-msbuild@v1
     
     - name: Restore NuGet packages
       working-directory: ./CEPluginLibrary
@@ -26,7 +26,7 @@ jobs:
       run: msbuild CEPluginLibrary.csproj /p:Configuration=Release /p:Platform=AnyCPU
     
     - name: Upload DLL artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # 更新到v4
       with:
         name: CEPluginExample.dll
         path: ./CEPluginLibrary/bin/Release/CEPluginExample.dll
