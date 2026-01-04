@@ -1,0 +1,32 @@
+name: Build CE MCP Plugin
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: windows-latest  # 必须使用Windows环境编译.NET Framework项目
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1  # 使用Microsoft官方的MSBuild设置
+    
+    - name: Restore NuGet packages
+      working-directory: ./CEPluginLibrary
+      run: nuget restore CEPluginLibrary.csproj
+    
+    - name: Build the project
+      working-directory: ./CEPluginLibrary
+      run: msbuild CEPluginLibrary.csproj /p:Configuration=Release /p:Platform=AnyCPU
+    
+    - name: Upload DLL artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: CEPluginExample.dll
+        path: ./CEPluginLibrary/bin/Release/CEPluginExample.dll
