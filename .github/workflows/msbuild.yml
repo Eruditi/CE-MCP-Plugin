@@ -51,13 +51,8 @@ jobs:
       working-directory: ${{ github.workspace }}
 
     - name: Build solution
-      run: |
-        msbuild ${{ env.SOLUTION_FILE_PATH }} \
-          /p:Configuration=${{ env.BUILD_CONFIGURATION }} \
-          /p:Platform=${{ env.BUILD_PLATFORM }} \
-          /p:BuildProjectReferences=true \
-          /p:RestorePackagesConfig=true \
-          /verbosity:minimal
+      run: msbuild ${{ env.SOLUTION_FILE_PATH }} /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform=${{ env.BUILD_PLATFORM }} /p:BuildProjectReferences=true /p:RestorePackagesConfig=true /verbosity:minimal
+      shell: cmd
       working-directory: ${{ github.workspace }}
 
     - name: List build output
