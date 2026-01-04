@@ -53,44 +53,15 @@ jobs:
         $libsDir = Join-Path $workspace 'libs'
         if (-not (Test-Path $libsDir)) { New-Item -ItemType Directory -Path $libsDir | Out-Null }
 
-        $tmp = Join-Path $env:RUNNER_TEMP 'lua53'
-        if (-not (Test-Path $tmp)) { New-Item -ItemType Directory -Path $tmp | Out-Null }
+        Write-Host 'Downloading Lua 5.3 Win32 library from cheat-engine repository...'
+        Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/badeesindi/cheat-engine/master/cheat-engine/cheatengine/bin/lua_extra/lua53-32.lib' -OutFile (Join-Path $libsDir 'lua53-32.lib') -UseBasicParsing
+        
+        Write-Host 'Downloading Lua 5.3 x64 library from cheat-engine repository...'
+        Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/badeesindi/cheat-engine/master/cheat-engine/cheatengine/bin/lua_extra/lua53-64.lib' -OutFile (Join-Path $libsDir 'lua53-64.lib') -UseBasicParsing
 
-        $win32Zip = Join-Path $tmp 'lua53-win32.zip'
-        $x64Zip   = Join-Path $tmp 'lua53-x64.zip'
-
-        Write-Host 'Downloading Lua 5.3.6 Win32...'
-        Invoke-WebRequest -Uri 'https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win32_lib.zip/download' -OutFile $win32Zip -UseBasicParsing -MaximumRedirection 5
-        Write-Host 'Downloading Lua 5.3.6 x64...'
-        Invoke-WebRequest -Uri 'https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win64_lib.zip/download' -OutFile $x64Zip -UseBasicParsing -MaximumRedirection 5
-
-        # Basic validation of downloaded files
-        function Test-IsZip($path) {
-          try {
-            $fs = [System.IO.File]::OpenRead($path)
-            $br = New-Object System.IO.BinaryReader($fs)
-            $sig = [System.BitConverter]::ToString($br.ReadBytes(4))
-            $br.Close(); $fs.Close()
-            return $sig -eq '50-4B-03-04'  # PK.. local file header signature
-          } catch {
-            return $false
-          }
-        }
-
-        if (-not (Test-IsZip $win32Zip)) { Write-Error "Downloaded Win32 archive is not a ZIP (path: $win32Zip)"; exit 1 }
-        if (-not (Test-IsZip $x64Zip))   { Write-Error "Downloaded x64 archive is not a ZIP (path: $x64Zip)"; exit 1 }
-
-        Expand-Archive -Path $win32Zip -DestinationPath (Join-Path $tmp 'lua53-win32') -Force
-        Expand-Archive -Path $x64Zip -DestinationPath (Join-Path $tmp 'lua53-x64') -Force
-
-        $win32Lib = Join-Path (Join-Path $tmp 'lua53-win32') 'lib\lua53.lib'
-        $x64Lib   = Join-Path (Join-Path $tmp 'lua53-x64') 'lib\lua53.lib'
-
-        if (-not (Test-Path $win32Lib)) { Write-Error "Expected Win32 .lib not found at $win32Lib"; exit 1 }
-        if (-not (Test-Path $x64Lib))   { Write-Error "Expected x64 .lib not found at $x64Lib"; exit 1 }
-
-        Copy-Item -Path $win32Lib -Destination (Join-Path $libsDir 'lua53-32.lib') -Force
-        Copy-Item -Path $x64Lib   -Destination (Join-Path $libsDir 'lua53-64.lib') -Force
+        # Validate downloaded files
+        if (-not (Test-Path (Join-Path $libsDir 'lua53-32.lib'))) { Write-Error "Failed to download lua53-32.lib"; exit 1 }
+        if (-not (Test-Path (Join-Path $libsDir 'lua53-64.lib'))) { Write-Error "Failed to download lua53-64.lib"; exit 1 }
 
         Write-Host 'libs content:'
         Get-ChildItem -Path $libsDir -Force | Format-Table Name,Length
