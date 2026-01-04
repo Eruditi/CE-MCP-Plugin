@@ -1,0 +1,79 @@
+name: Build CE-MCP-Plugin
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: 'Build Configuration'
+        required: true
+        default: 'Release'
+        type: choice
+        options:
+        - Release
+        - Debug
+      platform:
+        description: 'Build Platform'
+        required: true
+        default: 'Win32'
+        type: choice
+        options:
+        - Win32
+        - x64
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    env:
+      SOLUTION_FILE_PATH: CE-MCP-Plugin.sln
+      BUILD_CONFIGURATION: ${{ github.event.inputs.configuration || 'Release' }}
+      BUILD_PLATFORM: ${{ github.event.inputs.platform || 'Win32' }}
+      VISUAL_STUDIO_VERSION: '17.0' # Visual Studio 2022
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+      with:
+        vs-version: ${{ env.VISUAL_STUDIO_VERSION }}
+        msbuild-architecture: ${{ env.BUILD_PLATFORM }}
+
+    - name: Restore NuGet packages
+      run: nuget restore ${{ env.SOLUTION_FILE_PATH }}
+      working-directory: ${{ github.workspace }}
+
+    - name: Build solution
+      run: |
+        msbuild ${{ env.SOLUTION_FILE_PATH }} \
+          /p:Configuration=${{ env.BUILD_CONFIGURATION }} \
+          /p:Platform=${{ env.BUILD_PLATFORM }} \
+          /p:BuildProjectReferences=true \
+          /p:RestorePackagesConfig=true \
+          /verbosity:minimal
+      working-directory: ${{ github.workspace }}
+
+    - name: List build output
+      run: |
+        if ('${{ env.BUILD_PLATFORM }}' -eq 'x64') {
+          ls -la ${{ env.BUILD_PLATFORM }}\${{ env.BUILD_CONFIGURATION }}
+        } else {
+          ls -la ${{ env.BUILD_CONFIGURATION }}
+        }
+      working-directory: ${{ github.workspace }}
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: CE-MCP-Plugin-${{ env.BUILD_PLATFORM }}-${{ env.BUILD_CONFIGURATION }}
+        path: |
+          ${{ env.BUILD_PLATFORM }}/${{ env.BUILD_CONFIGURATION }}/CE-MCP-Plugin.dll
+          ${{ env.BUILD_CONFIGURATION }}/CE-MCP-Plugin.dll
+        retention-days: 30
