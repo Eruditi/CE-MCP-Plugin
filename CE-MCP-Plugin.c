@@ -1,13 +1,13 @@
 // CE-MCP-Plugin.c : Defines the entry point for the DLL application.
 // Cheat Engine MCP (Memory Cheat Plugin) for AI integration
 
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include "cepluginsdk.h"
+#include "..\cepluginsdk.h"
 #include "bla.h"
 
 // Link with Winsock library
