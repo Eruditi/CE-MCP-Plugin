@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "..\cepluginsdk.h"
+#include "cepluginsdk.h"
 #include "bla.h"
 
 // Link with Winsock library
