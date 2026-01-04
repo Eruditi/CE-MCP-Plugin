@@ -129,7 +129,7 @@ UINT_PTR ParseAddress(const char* addressStr) {
 
 // 辅助函数：读取内存
 BOOL ReadMemory(UINT_PTR address, char* type, void* buffer) {
-    if (*Exported.ReadProcessMemory == NULL) {
+    if (Exported.ReadProcessMemory == NULL) {
         return FALSE;
     }
     
@@ -162,34 +162,38 @@ BOOL ReadMemory(UINT_PTR address, char* type, void* buffer) {
 
 // 辅助函数：写入内存
 BOOL WriteMemory(UINT_PTR address, const char* valueStr, const char* type) {
-    if (*Exported.WriteProcessMemory == NULL) {
+    if (Exported.WriteProcessMemory == NULL) {
         return FALSE;
     }
+    
+    // 定义WriteProcessMemory函数指针类型
+    typedef BOOL(__stdcall *WriteProcessMemoryFunc)(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T* lpNumberOfBytesWritten);
+    WriteProcessMemoryFunc writeMem = (WriteProcessMemoryFunc)Exported.WriteProcessMemory;
     
     SIZE_T bytesWritten;
     BOOL result = FALSE;
     
     if (strcmp(type, "byte") == 0 || strcmp(type, "BYTE") == 0) {
         BYTE value = (BYTE)strtoul(valueStr, NULL, 0);
-        result = WriteProcessMemory(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 1, &bytesWritten);
+        result = writeMem(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 1, &bytesWritten);
     } else if (strcmp(type, "word") == 0 || strcmp(type, "WORD") == 0) {
         WORD value = (WORD)strtoul(valueStr, NULL, 0);
-        result = WriteProcessMemory(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 2, &bytesWritten);
+        result = writeMem(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 2, &bytesWritten);
     } else if (strcmp(type, "dword") == 0 || strcmp(type, "DWORD") == 0) {
         DWORD value = (DWORD)strtoul(valueStr, NULL, 0);
-        result = WriteProcessMemory(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 4, &bytesWritten);
+        result = writeMem(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 4, &bytesWritten);
     } else if (strcmp(type, "float") == 0 || strcmp(type, "FLOAT") == 0) {
         float value = (float)atof(valueStr);
-        result = WriteProcessMemory(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 4, &bytesWritten);
+        result = writeMem(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 4, &bytesWritten);
     } else if (strcmp(type, "double") == 0 || strcmp(type, "DOUBLE") == 0) {
         double value = atof(valueStr);
-        result = WriteProcessMemory(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 8, &bytesWritten);
+        result = writeMem(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 8, &bytesWritten);
     } else if (strcmp(type, "int64") == 0 || strcmp(type, "INT64") == 0) {
         INT64 value = _strtoi64(valueStr, NULL, 0);
-        result = WriteProcessMemory(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 8, &bytesWritten);
+        result = writeMem(*Exported.OpenedProcessHandle, (LPVOID)address, &value, 8, &bytesWritten);
     } else if (strcmp(type, "string") == 0 || strcmp(type, "STRING") == 0) {
         // 写入字符串
-        result = WriteProcessMemory(*Exported.OpenedProcessHandle, (LPVOID)address, valueStr, strlen(valueStr) + 1, &bytesWritten);
+        result = writeMem(*Exported.OpenedProcessHandle, (LPVOID)address, valueStr, strlen(valueStr) + 1, &bytesWritten);
     }
     
     return result && bytesWritten > 0;
