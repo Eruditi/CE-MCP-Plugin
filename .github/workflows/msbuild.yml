@@ -48,7 +48,7 @@ jobs:
 
     - name: Download Lua 5.3 libraries
       run: |
-        mkdir -p libs
+        if not exist libs mkdir libs
         # Download Lua 5.3.6 Win32 static library
         curl -L -o lua53-win32.zip "https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win32_lib.zip/download"
         # Download Lua 5.3.6 x64 static library
@@ -56,16 +56,12 @@ jobs:
         # Extract libraries
         powershell -Command "Expand-Archive -Path lua53-win32.zip -DestinationPath lua53-win32 -Force"
         powershell -Command "Expand-Archive -Path lua53-x64.zip -DestinationPath lua53-x64 -Force"
-        # Copy lib files to libs directory
-        cp lua53-win32/lib/*.lib libs/
-        cp lua53-x64/lib/*.lib libs/
-        # Rename libraries to match project expectations
-        cd libs
-        mv lua53.lib lua53-32.lib
-        # For x64, we need to check if there's a separate file or use the same
-        # LuaBinaries provides lua53.lib for both, we'll create a copy for x64
-        cp lua53-32.lib lua53-64.lib
-        cd ..
+        # Copy and rename Win32 library
+        copy lua53-win32\lib\lua53.lib libs\lua53-32.lib
+        # Copy and rename x64 library
+        copy lua53-x64\lib\lua53.lib libs\lua53-64.lib
+        # Verify files exist
+        dir libs
       shell: cmd
 
     - name: Build solution
