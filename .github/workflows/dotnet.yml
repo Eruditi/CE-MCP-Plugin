@@ -15,14 +15,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Visual Studio Build Tools
+    - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.0.3
     
-    - name: Restore dependencies
+    - name: Restore NuGet packages
       run: nuget restore CEPluginLibrary.sln
     
-    - name: Build solution
-      run: msbuild CEPluginLibrary.sln /p:Configuration=Release /p:Platform="Any CPU"
+    - name: Build project
+      run: msbuild CEPluginLibrary/CEPluginLibrary.csproj /p:Configuration=Release
     
     - name: Upload DLL artifact
       uses: actions/upload-artifact@v4
