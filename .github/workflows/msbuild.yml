@@ -60,9 +60,9 @@ jobs:
         $x64Zip   = Join-Path $tmp 'lua53-x64.zip'
 
         Write-Host 'Downloading Lua 5.3.6 Win32...'
-        Invoke-WebRequest -Uri 'https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win32_lib.zip/download' -OutFile $win32Zip -UseBasicParsing
+        Invoke-WebRequest -Uri 'https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win32_lib.zip/download' -OutFile $win32Zip -UseBasicParsing -MaximumRedirection 5
         Write-Host 'Downloading Lua 5.3.6 x64...'
-        Invoke-WebRequest -Uri 'https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win64_lib.zip/download' -OutFile $x64Zip -UseBasicParsing
+        Invoke-WebRequest -Uri 'https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%20Libraries/Static/lua-5.3.6_Win64_lib.zip/download' -OutFile $x64Zip -UseBasicParsing -MaximumRedirection 5
 
         # Basic validation of downloaded files
         function Test-IsZip($path) {
