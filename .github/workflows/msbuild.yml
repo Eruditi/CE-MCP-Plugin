@@ -110,11 +110,12 @@ jobs:
       working-directory: ${{ github.workspace }}
 
     - name: List build output
+      shell: pwsh
       run: |
         if ('${{ env.BUILD_PLATFORM }}' -eq 'x64') {
-          ls -la ${{ env.BUILD_PLATFORM }}\${{ env.BUILD_CONFIGURATION }}
+          Get-ChildItem -Path "${{ env.BUILD_PLATFORM }}\${{ env.BUILD_CONFIGURATION }}" -Force | Format-Table Name,Length,LastWriteTime
         } else {
-          ls -la ${{ env.BUILD_CONFIGURATION }}
+          Get-ChildItem -Path "${{ env.BUILD_CONFIGURATION }}" -Force | Format-Table Name,Length,LastWriteTime
         }
       working-directory: ${{ github.workspace }}
 
