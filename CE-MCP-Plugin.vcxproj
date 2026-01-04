@@ -72,25 +72,25 @@
     <OutDir>Debug\</OutDir>
     <IntDir>Debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(MSBuildProjectDirectory)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(MSBuildProjectDirectory)\libs;$(MSBuildProjectDirectory)\..\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>Release\</OutDir>
     <IntDir>Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(MSBuildProjectDirectory)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(MSBuildProjectDirectory)\libs;$(MSBuildProjectDirectory)\..\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(MSBuildProjectDirectory)\..\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(MSBuildProjectDirectory)\libs;$(MSBuildProjectDirectory)\..\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(MSBuildProjectDirectory)\libs;$(MSBuildProjectDirectory)\..\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
