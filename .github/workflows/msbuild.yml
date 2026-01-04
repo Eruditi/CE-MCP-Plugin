@@ -2,9 +2,9 @@ name: Build CE-MCP-Plugin
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, CE-MCP-Plugin ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, CE-MCP-Plugin ]
   workflow_dispatch:
     inputs:
       configuration:
