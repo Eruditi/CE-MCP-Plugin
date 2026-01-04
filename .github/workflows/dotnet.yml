@@ -12,19 +12,17 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1
+    - name: Setup Visual Studio Build Tools
+      uses: microsoft/setup-msbuild@v1.0.3
     
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v2
-    
-    - name: Restore NuGet packages for solution
+    - name: Restore dependencies
       run: nuget restore CEPluginLibrary.sln
     
-    - name: Build the solution
-      run: msbuild CEPluginLibrary.sln /p:Configuration=Release
+    - name: Build solution
+      run: msbuild CEPluginLibrary.sln /p:Configuration=Release /p:Platform="Any CPU"
     
     - name: Upload DLL artifact
       uses: actions/upload-artifact@v4
