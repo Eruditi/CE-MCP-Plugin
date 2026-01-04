@@ -90,7 +90,7 @@
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>D:\git\cheat-engine\Cheat Engine\bin\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -165,7 +165,7 @@
       </CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalOptions>/def:./example-c.def %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/def:./CE-MCP-Plugin.def %(AdditionalOptions)</AdditionalOptions>
       <OutputFile>$(OutDir)CE-MCP-Plugin.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)CE-MCP-Plugin.pdb</ProgramDatabaseFile>
@@ -193,15 +193,15 @@
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalOptions>/def:./example-c.def %(AdditionalOptions)</AdditionalOptions>
-      <OutputFile>$(OutDir)example-c.dll</OutputFile>
+      <AdditionalOptions>/def:./CE-MCP-Plugin.def %(AdditionalOptions)</AdditionalOptions>
+      <OutputFile>$(OutDir)CE-MCP-Plugin.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
-      <ImportLibrary>$(OutDir)example-c.lib</ImportLibrary>
+      <ImportLibrary>$(OutDir)CE-MCP-Plugin.lib</ImportLibrary>
       <TargetMachine>MachineX64</TargetMachine>
       <AdditionalDependencies>lua53-64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
