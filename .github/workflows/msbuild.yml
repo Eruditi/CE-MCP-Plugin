@@ -89,11 +89,11 @@ jobs:
         Write-Host "Using vcvars64: $vcvars64"
         
         # Build Win32 static library
-        cmd /c ('"' + $vcvars32 + '" && cl /MD /O2 /c /DLUA_BUILD_AS_DLL *.c && lib /OUT:lua53-static.lib *.obj && copy lua53-static.lib "' + $libsDir + '\lua53-32.lib"')
+        cmd /c ('"' + $vcvars32 + '" && cl /MT /O2 /c /DLUA_BUILD_AS_DLL *.c && lib /OUT:lua53-static.lib *.obj && copy lua53-static.lib "' + $libsDir + '\lua53-32.lib"')
         
         # Build x64 static library
         Write-Host 'Building Lua 5.3.6 for x64...'
-        cmd /c ('"' + $vcvars64 + '" && cl /MD /O2 /c /DLUA_BUILD_AS_DLL *.c && lib /OUT:lua53-static.lib *.obj && copy lua53-static.lib "' + $libsDir + '\lua53-64.lib"')
+        cmd /c ('"' + $vcvars64 + '" && cl /MT /O2 /c /DLUA_BUILD_AS_DLL *.c && lib /OUT:lua53-static.lib *.obj && copy lua53-static.lib "' + $libsDir + '\lua53-64.lib"')
         
         Pop-Location
         
