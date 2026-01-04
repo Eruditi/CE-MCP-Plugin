@@ -16,49 +16,46 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <BaseOutputPath>bin\</BaseOutputPath>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <!-- 首先设置一个默认OutputPath，确保验证阶段不会失败 -->
     <OutputPath>bin\Release\</OutputPath>
-    <!-- 然后根据Configuration覆盖为正确的OutputPath -->
     <OutputPath Condition=" '$(Configuration)' == 'Debug' ">bin\Debug\</OutputPath>
     <OutputPath Condition=" '$(Configuration)' == 'Release' ">bin\Release\</OutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
-  
-  <!-- Debug Configuration -->
+
+  <!-- Debug AnyCPU -->
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <OutputPath>bin\Debug\</OutputPath>
   </PropertyGroup>
-  
+
+  <!-- Debug Any CPU -->
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Any CPU' ">
     <DebugType>full</DebugType>
     <DebugSymbols>True</DebugSymbols>
     <Optimize>False</Optimize>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <OutputPath>bin\Debug\</OutputPath>
   </PropertyGroup>
-  
-  <!-- Release Configuration -->
+
+  <!-- Release AnyCPU -->
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>True</Optimize>
     <DefineConstants>TRACE</DefineConstants>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <OutputPath>bin\Release\</OutputPath>
   </PropertyGroup>
-  
+
+  <!-- Release Any CPU -->
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Any CPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>True</Optimize>
     <DefineConstants>TRACE</DefineConstants>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <OutputPath>bin\Release\</OutputPath>
   </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -70,6 +67,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed" />
   </ItemGroup>
+
   <ItemGroup>
     <Compile Include="PluginExample.cs" />
     <Compile Include="Configuration.cs" />
@@ -78,15 +76,10 @@
     <Compile Include="SDK\CESDKLua.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
