@@ -133,7 +133,7 @@
       </CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalOptions>/def:./example-c.def %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/def:./CE-MCP-Plugin.def %(AdditionalOptions)</AdditionalOptions>
       <OutputFile>$(OutDir)CE-MCP-Plugin.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
