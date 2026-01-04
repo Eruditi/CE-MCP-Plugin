@@ -12,21 +12,22 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v4  # 更新到v4
+    - uses: actions/checkout@v4
     
-    - name: Setup .NET Framework 4.7.2
+    - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1
     
-    - name: Restore NuGet packages
-      working-directory: ./CEPluginLibrary
-      run: nuget restore CEPluginLibrary.csproj
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
     
-    - name: Build the project
-      working-directory: ./CEPluginLibrary
-      run: msbuild CEPluginLibrary.csproj /p:Configuration=Release /p:Platform=AnyCPU
+    - name: Restore NuGet packages for solution
+      run: nuget restore CEPluginLibrary.sln
+    
+    - name: Build the solution
+      run: msbuild CEPluginLibrary.sln /p:Configuration=Release
     
     - name: Upload DLL artifact
-      uses: actions/upload-artifact@v4  # 更新到v4
+      uses: actions/upload-artifact@v4
       with:
         name: CEPluginExample.dll
         path: ./CEPluginLibrary/bin/Release/CEPluginExample.dll
