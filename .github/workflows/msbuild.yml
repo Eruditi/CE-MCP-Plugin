@@ -46,23 +46,38 @@ jobs:
         vs-version: ${{ env.VISUAL_STUDIO_VERSION }}
         msbuild-architecture: ${{ env.BUILD_PLATFORM }}
 
-    - name: Download Lua 5.3 libraries
+    - name: Build Lua 5.3 static libraries
       shell: pwsh
       run: |
         $workspace = $env:GITHUB_WORKSPACE
         $libsDir = Join-Path $workspace 'libs'
-        if (-not (Test-Path $libsDir)) { New-Item -ItemType Directory -Path $libsDir | Out-Null }
-
-        Write-Host 'Downloading Lua 5.3 Win32 library from cheat-engine repository...'
-        Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/badeesindi/cheat-engine/master/cheat-engine/cheatengine/bin/lua_extra/lua53-32.lib' -OutFile (Join-Path $libsDir 'lua53-32.lib') -UseBasicParsing
+        $luaSrcDir = Join-Path $env:RUNNER_TEMP 'lua-5.3.6'
+        $luaSrcZip = Join-Path $env:RUNNER_TEMP 'lua-5.3.6.tar.gz'
         
-        Write-Host 'Downloading Lua 5.3 x64 library from cheat-engine repository...'
-        Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/badeesindi/cheat-engine/master/cheat-engine/cheatengine/bin/lua_extra/lua53-64.lib' -OutFile (Join-Path $libsDir 'lua53-64.lib') -UseBasicParsing
-
-        # Validate downloaded files
-        if (-not (Test-Path (Join-Path $libsDir 'lua53-32.lib'))) { Write-Error "Failed to download lua53-32.lib"; exit 1 }
-        if (-not (Test-Path (Join-Path $libsDir 'lua53-64.lib'))) { Write-Error "Failed to download lua53-64.lib"; exit 1 }
-
+        if (-not (Test-Path $libsDir)) { New-Item -ItemType Directory -Path $libsDir | Out-Null }
+        if (-not (Test-Path $luaSrcDir)) { New-Item -ItemType Directory -Path $luaSrcDir | Out-Null }
+        
+        Write-Host 'Downloading Lua 5.3.6 source code...'
+        Invoke-WebRequest -Uri 'https://www.lua.org/ftp/lua-5.3.6.tar.gz' -OutFile $luaSrcZip -UseBasicParsing
+        tar -xzf $luaSrcZip -C $env:RUNNER_TEMP
+        
+        Write-Host 'Building Lua 5.3.6 for Win32...'
+        $luaSrcPath = Join-Path $env:RUNNER_TEMP 'lua-5.3.6\src'
+        Push-Location $luaSrcPath
+        
+        # Build Win32 static library
+        cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat" && cl /MD /O2 /c /DLUA_BUILD_AS_DLL *.c && lib /OUT:lua53-static.lib *.obj && copy lua53-static.lib "' + $libsDir + '\lua53-32.lib"'
+        
+        # Build x64 static library
+        Write-Host 'Building Lua 5.3.6 for x64...'
+        cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" && cl /MD /O2 /c /DLUA_BUILD_AS_DLL *.c && lib /OUT:lua53-static.lib *.obj && copy lua53-static.lib "' + $libsDir + '\lua53-64.lib"'
+        
+        Pop-Location
+        
+        # Validate built files
+        if (-not (Test-Path (Join-Path $libsDir 'lua53-32.lib'))) { Write-Error "Failed to build lua53-32.lib"; exit 1 }
+        if (-not (Test-Path (Join-Path $libsDir 'lua53-64.lib'))) { Write-Error "Failed to build lua53-64.lib"; exit 1 }
+        
         Write-Host 'libs content:'
         Get-ChildItem -Path $libsDir -Force | Format-Table Name,Length
 
