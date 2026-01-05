@@ -77,7 +77,12 @@ BOOL ConnectToAIServer() {
 
         // Set socket to non-blocking mode for timeout
         u_long mode = 1;
-        ioctlsocket(aiSocket, FIONBIO, &mode);
+        if (ioctlsocket(aiSocket, FIONBIO, &mode) == SOCKET_ERROR) {
+            Exported.ShowMessage("ioctlsocket failed to set non-blocking mode");
+            closesocket(aiSocket);
+            aiSocket = INVALID_SOCKET;
+            continue;
+        }
         
         // Connect to server (non-blocking)
         iResult = connect(aiSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
@@ -106,9 +111,12 @@ BOOL ConnectToAIServer() {
                 closesocket(aiSocket);
                 aiSocket = INVALID_SOCKET;
                 Exported.ShowMessage("Connection to AI server timed out");
-                freeaddrinfo(result);
-                return FALSE;
+                continue;
             } else if (iResult == SOCKET_ERROR) {
+                int selectError = WSAGetLastError();
+                char errorMsg[128];
+                sprintf_s(errorMsg, sizeof(errorMsg), "select failed with error: %d", selectError);
+                Exported.ShowMessage(errorMsg);
                 closesocket(aiSocket);
                 aiSocket = INVALID_SOCKET;
                 continue;
@@ -124,7 +132,13 @@ BOOL ConnectToAIServer() {
         
         // Set socket back to blocking mode
         mode = 0;
-        ioctlsocket(aiSocket, FIONBIO, &mode);
+        if (ioctlsocket(aiSocket, FIONBIO, &mode) == SOCKET_ERROR) {
+            Exported.ShowMessage("ioctlsocket failed to set blocking mode");
+            closesocket(aiSocket);
+            aiSocket = INVALID_SOCKET;
+            freeaddrinfo(result);
+            return FALSE;
+        }
         
         break;
     }
