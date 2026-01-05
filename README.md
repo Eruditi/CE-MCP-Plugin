@@ -192,12 +192,22 @@ print(result)
 
 ```
 CE-MCP-Plugin/
-├── CE-MCP-Plugin.c          # 主源代码文件
+├── CE-MCP-Plugin.c          # 主源代码文件（1592行，74个命令）
 ├── CE-MCP-Plugin.def        # DLL导出函数定义
 ├── CE-MCP-Plugin.sln        # Visual Studio解决方案
 ├── CE-MCP-Plugin.vcxproj    # Visual Studio项目文件
+├── .github/
+│   └── workflows/
+│       └── msbuild.yml      # GitHub Actions CI/CD工作流
 ├── bla.cpp                  # 示例辅助文件
 ├── bla.h                    # 示例头文件
+├── cepluginsdk.h            # Cheat Engine SDK头文件
+├── lua.h                    # Lua 5.3头文件
+├── lualib.h                 # Lua标准库头文件
+├── lauxlib.h                # Lua辅助库头文件
+├── luaconf.h                # Lua配置头文件
+├── example-c.vcproj         # 示例项目文件
+├── example-c.vcxproj.filters # 示例项目过滤器
 └── README.md                # 项目文档
 ```
 
