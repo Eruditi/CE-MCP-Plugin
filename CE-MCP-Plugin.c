@@ -46,7 +46,7 @@ void CleanupWinsock() {
     WSACleanup();
 }
 
-// Connect to AI server
+// Connect to AI server with timeout
 BOOL ConnectToAIServer() {
     struct addrinfo *result = NULL, *ptr = NULL, hints;
     ZeroMemory(&hints, sizeof(hints));
@@ -74,13 +74,57 @@ BOOL ConnectToAIServer() {
             return FALSE;
         }
 
-        // Connect to server
+        // Set socket to non-blocking mode for timeout
+        u_long mode = 1;
+        ioctlsocket(aiSocket, FIONBIO, &mode);
+        
+        // Connect to server (non-blocking)
         iResult = connect(aiSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
-            closesocket(aiSocket);
-            aiSocket = INVALID_SOCKET;
-            continue;
+            int error = WSAGetLastError();
+            if (error != WSAEWOULDBLOCK) {
+                closesocket(aiSocket);
+                aiSocket = INVALID_SOCKET;
+                continue;
+            }
+            
+            // Wait for connection with timeout (3 seconds)
+            fd_set writefds, exceptfds;
+            FD_ZERO(&writefds);
+            FD_ZERO(&exceptfds);
+            FD_SET(aiSocket, &writefds);
+            FD_SET(aiSocket, &exceptfds);
+            
+            struct timeval timeout;
+            timeout.tv_sec = 3;
+            timeout.tv_usec = 0;
+            
+            iResult = select(0, NULL, &writefds, &exceptfds, &timeout);
+            if (iResult == 0) {
+                // Connection timeout
+                closesocket(aiSocket);
+                aiSocket = INVALID_SOCKET;
+                Exported.ShowMessage("Connection to AI server timed out");
+                freeaddrinfo(result);
+                return FALSE;
+            } else if (iResult == SOCKET_ERROR) {
+                closesocket(aiSocket);
+                aiSocket = INVALID_SOCKET;
+                continue;
+            }
+            
+            // Check if connection succeeded
+            if (FD_ISSET(aiSocket, &exceptfds)) {
+                closesocket(aiSocket);
+                aiSocket = INVALID_SOCKET;
+                continue;
+            }
         }
+        
+        // Set socket back to blocking mode
+        mode = 0;
+        ioctlsocket(aiSocket, FIONBIO, &mode);
+        
         break;
     }
 
