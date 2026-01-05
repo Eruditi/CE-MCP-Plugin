@@ -21,6 +21,7 @@ ExportedFunctions Exported;
 SOCKET aiSocket = INVALID_SOCKET;
 HANDLE aiThread = NULL;
 BOOL isRunning = FALSE;
+CRITICAL_SECTION aiCriticalSection; // Critical section for thread synchronization
 char aiServerIP[16] = "127.0.0.1"; // Default AI server IP
 int aiServerPort = 8888; // Default AI server port
 
@@ -70,8 +71,8 @@ BOOL ConnectToAIServer() {
         aiSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
         if (aiSocket == INVALID_SOCKET) {
             Exported.ShowMessage("socket failed");
-            freeaddrinfo(result);
-            return FALSE;
+            // Don't freeaddrinfo here, we'll do it after the loop
+            continue;
         }
 
         // Set socket to non-blocking mode for timeout
@@ -141,14 +142,20 @@ BOOL ConnectToAIServer() {
 
 // Disconnect from AI server
 void DisconnectFromAIServer() {
+    EnterCriticalSection(&aiCriticalSection);
     if (aiSocket != INVALID_SOCKET) {
         closesocket(aiSocket);
         aiSocket = INVALID_SOCKET;
     }
+    LeaveCriticalSection(&aiCriticalSection);
 }
 
 // Parse AI command
 BOOL ParseAICommand(char* buffer, AICommand* cmd) {
+    if (buffer == NULL || cmd == NULL) {
+        return FALSE;
+    }
+    
     char* token = strtok(buffer, ":");
     if (token == NULL) {
         return FALSE;
@@ -168,7 +175,10 @@ BOOL ParseAICommand(char* buffer, AICommand* cmd) {
 // Execute AI command
 // 辅助函数：解析内存地址
 UINT_PTR ParseAddress(const char* addressStr) {
-    return strtoull(addressStr, NULL, 16);
+    if (addressStr == NULL) {
+        return 0;
+    }
+    return (UINT_PTR)strtoull(addressStr, NULL, 16);
 }
 
 // 辅助函数：读取内存
@@ -273,7 +283,7 @@ void ExecuteAICommand(AICommand* cmd) {
                 if (typeStr != NULL) {
                     UINT_PTR address = ParseAddress(addressStr);
                     BOOL result = WriteMemory(address, valueStr, typeStr);
-                    sprintf_s(message, sizeof(message), "WriteMemory result: %d, Address: 0x%llX, Value: %s, Type: %s", 
+                    sprintf_s(message, sizeof(message), "WriteMemory result: %d, Address: 0x%IX, Value: %s, Type: %s", 
                         result, address, valueStr, typeStr);
                     Exported.ShowMessage(message);
                 } else {
@@ -296,33 +306,33 @@ void ExecuteAICommand(AICommand* cmd) {
                 BOOL result = ReadMemory(address, typeStr, buffer);
                 if (result) {
                     if (strcmp(typeStr, "byte") == 0 || strcmp(typeStr, "BYTE") == 0) {
-                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%llX, Value: 0x%02X, Type: %s", 
+                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%IX, Value: 0x%02X, Type: %s", 
                             result, address, *(BYTE*)buffer, typeStr);
                     } else if (strcmp(typeStr, "word") == 0 || strcmp(typeStr, "WORD") == 0) {
-                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%llX, Value: 0x%04X, Type: %s", 
+                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%IX, Value: 0x%04X, Type: %s", 
                             result, address, *(WORD*)buffer, typeStr);
                     } else if (strcmp(typeStr, "dword") == 0 || strcmp(typeStr, "DWORD") == 0) {
-                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%llX, Value: 0x%08X, Type: %s", 
+                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%IX, Value: 0x%08X, Type: %s", 
                             result, address, *(DWORD*)buffer, typeStr);
                     } else if (strcmp(typeStr, "float") == 0 || strcmp(typeStr, "FLOAT") == 0) {
-                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%llX, Value: %.6f, Type: %s", 
+                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%IX, Value: %.6f, Type: %s", 
                             result, address, *(float*)buffer, typeStr);
                     } else if (strcmp(typeStr, "double") == 0 || strcmp(typeStr, "DOUBLE") == 0) {
-                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%llX, Value: %.12f, Type: %s", 
+                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%IX, Value: %.12f, Type: %s", 
                             result, address, *(double*)buffer, typeStr);
                     } else if (strcmp(typeStr, "int64") == 0 || strcmp(typeStr, "INT64") == 0) {
-                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%llX, Value: 0x%016llX, Type: %s", 
+                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%IX, Value: 0x%016llX, Type: %s", 
                             result, address, *(INT64*)buffer, typeStr);
                     } else if (strcmp(typeStr, "string") == 0 || strcmp(typeStr, "STRING") == 0) {
-                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%llX, Value: %s, Type: %s", 
+                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%IX, Value: %s, Type: %s", 
                             result, address, buffer, typeStr);
                     } else {
-                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%llX, Type: %s, Raw Value: %s", 
+                        sprintf_s(message, sizeof(message), "ReadMemory result: %d, Address: 0x%IX, Type: %s, Raw Value: %s", 
                             result, address, typeStr, buffer);
                     }
                     Exported.ShowMessage(message);
                 } else {
-                    sprintf_s(message, sizeof(message), "ReadMemory failed for Address: 0x%llX, Type: %s", address, typeStr);
+                    sprintf_s(message, sizeof(message), "ReadMemory failed for Address: 0x%IX, Type: %s", address, typeStr);
                     Exported.ShowMessage(message);
                 }
             } else {
@@ -342,19 +352,19 @@ void ExecuteAICommand(AICommand* cmd) {
                 int returnedSize;
                 BOOL result = Exported.Assembler(address, instruction, output, sizeof(output), &returnedSize);
                 if (result) {
-                    sprintf_s(message, sizeof(message), "ASSEMBLE result: %d, Address: 0x%llX, Instruction: %s\nMachine Code: ", 
+                    sprintf_s(message, sizeof(message), "ASSEMBLE result: %d, Address: 0x%IX, Instruction: %s\nMachine Code: ", 
                         result, address, instruction);
                     // 格式化机器码
                     char machineCode[64] = {0};
-                    for (int i = 0; i < returnedSize; i++) {
-                        char byteStr[4];
-                        sprintf_s(byteStr, sizeof(byteStr), "%02X ", output[i]);
-                        strcat_s(machineCode, sizeof(machineCode), byteStr);
+                    size_t machineCodeLen = 0;
+                    for (int i = 0; i < returnedSize && machineCodeLen < sizeof(machineCode) - 3; i++) {
+                        sprintf_s(machineCode + machineCodeLen, sizeof(machineCode) - machineCodeLen, "%02X ", output[i]);
+                        machineCodeLen = strlen(machineCode);
                     }
                     strcat_s(message, sizeof(message), machineCode);
                     Exported.ShowMessage(message);
                 } else {
-                    sprintf_s(message, sizeof(message), "ASSEMBLE failed: Address: 0x%llX, Instruction: %s", address, instruction);
+                    sprintf_s(message, sizeof(message), "ASSEMBLE failed: Address: 0x%IX, Instruction: %s", address, instruction);
                     Exported.ShowMessage(message);
                 }
             } else {
@@ -371,11 +381,11 @@ void ExecuteAICommand(AICommand* cmd) {
             char output[256];
             BOOL result = Exported.Disassembler(address, output, sizeof(output));
             if (result) {
-                sprintf_s(message, sizeof(message), "DISASSEMBLE result: %d, Address: 0x%llX\nInstruction: %s", 
+                sprintf_s(message, sizeof(message), "DISASSEMBLE result: %d, Address: 0x%IX\nInstruction: %s", 
                     result, address, output);
                 Exported.ShowMessage(message);
             } else {
-                sprintf_s(message, sizeof(message), "DISASSEMBLE failed: Address: 0x%llX", address);
+                sprintf_s(message, sizeof(message), "DISASSEMBLE failed: Address: 0x%IX", address);
                 Exported.ShowMessage(message);
             }
         } else {
@@ -439,7 +449,7 @@ void ExecuteAICommand(AICommand* cmd) {
                     
                     if (regSet) {
                         BOOL result = Exported.ChangeRegistersAtAddress(address, &changereg);
-                        sprintf_s(message, sizeof(message), "CHANGE_REGISTER result: %d, Address: 0x%llX, Register: %s, Value: 0x%llX", 
+                        sprintf_s(message, sizeof(message), "CHANGE_REGISTER result: %d, Address: 0x%IX, Register: %s, Value: 0x%IX", 
                             result, address, regName, value);
                         Exported.ShowMessage(message);
                     } else {
@@ -481,7 +491,7 @@ void ExecuteAICommand(AICommand* cmd) {
                 int size = atoi(sizeStr);
                 
                 int freezeID = Exported.FreezeMem(address, size);
-                sprintf_s(message, sizeof(message), "FREEZE_MEMORY result: freezeID = %d, Address: 0x%llX, Size: %d", 
+                sprintf_s(message, sizeof(message), "FREEZE_MEMORY result: freezeID = %d, Address: 0x%IX, Size: %d", 
                     freezeID, address, size);
                 Exported.ShowMessage(message);
             } else {
@@ -552,7 +562,16 @@ DWORD WINAPI AICommunicationThread(LPVOID lpParam) {
     
     while (isRunning) {
         // Receive data from AI server
-        iResult = recv(aiSocket, recvBuffer, sizeof(recvBuffer) - 1, 0);
+        EnterCriticalSection(&aiCriticalSection);
+        SOCKET currentSocket = aiSocket;
+        LeaveCriticalSection(&aiCriticalSection);
+        
+        if (currentSocket == INVALID_SOCKET) {
+            Sleep(100);
+            continue;
+        }
+        
+        iResult = recv(currentSocket, recvBuffer, sizeof(recvBuffer) - 1, 0);
         if (iResult > 0) {
             recvBuffer[iResult] = '\0';
             
@@ -590,6 +609,8 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
         case DLL_PROCESS_ATTACH:
             // Initialize Winsock when DLL is loaded
             InitWinsock();
+            // Initialize critical section for thread synchronization
+            InitializeCriticalSection(&aiCriticalSection);
             break;
 
         case DLL_THREAD_ATTACH:
@@ -599,6 +620,8 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
         case DLL_PROCESS_DETACH:
             // Cleanup Winsock when DLL is unloaded
             CleanupWinsock();
+            // Delete critical section
+            DeleteCriticalSection(&aiCriticalSection);
             break;
     }
     
@@ -624,12 +647,16 @@ int lua_aiSendCommand(lua_State* L) {
         return 1;
     }
     
-    if (aiSocket == INVALID_SOCKET) {
+    EnterCriticalSection(&aiCriticalSection);
+    SOCKET currentSocket = aiSocket;
+    LeaveCriticalSection(&aiCriticalSection);
+    
+    if (currentSocket == INVALID_SOCKET) {
         lua_pushstring(L, "Error: Not connected to AI server");
         return 1;
     }
     
-    int iResult = send(aiSocket, command, (int)strlen(command), 0);
+    int iResult = send(currentSocket, command, (int)strlen(command), 0);
     if (iResult == SOCKET_ERROR) {
         lua_pushstring(L, "Error: Failed to send command");
         return 1;
@@ -663,15 +690,23 @@ BOOL __stdcall CEPlugin_InitializePlugin(PExportedFunctions ef, int pluginid) {
     
     // Register Lua functions
     lua_State* lua_state = ef->GetLuaState();
-    lua_register(lua_state, "aiSendCommand", lua_aiSendCommand);
+    if (lua_state != NULL) {
+        lua_register(lua_state, "aiSendCommand", lua_aiSendCommand);
+    } else {
+        Exported.ShowMessage("Warning: Failed to get Lua state, Lua functions will not be available");
+    }
     
     // Connect to AI server
     if (ConnectToAIServer()) {
         // Start AI communication thread
+        EnterCriticalSection(&aiCriticalSection);
         isRunning = TRUE;
         aiThread = CreateThread(NULL, 0, AICommunicationThread, NULL, 0, NULL);
+        LeaveCriticalSection(&aiCriticalSection);
+        
         if (aiThread == NULL) {
             Exported.ShowMessage("Failed to create AI communication thread");
+            isRunning = FALSE;
             DisconnectFromAIServer();
             return FALSE;
         }
@@ -683,9 +718,18 @@ BOOL __stdcall CEPlugin_InitializePlugin(PExportedFunctions ef, int pluginid) {
 
 BOOL __stdcall CEPlugin_DisablePlugin(void) {
     // Stop AI communication thread
+    EnterCriticalSection(&aiCriticalSection);
     isRunning = FALSE;
+    LeaveCriticalSection(&aiCriticalSection);
+    
     if (aiThread != NULL) {
-        WaitForSingleObject(aiThread, 5000);
+        DWORD waitResult = WaitForSingleObject(aiThread, 5000);
+        if (waitResult == WAIT_TIMEOUT) {
+            Exported.ShowMessage("Warning: AI communication thread did not stop gracefully");
+            // Thread is still running, but we'll proceed with cleanup
+        } else if (waitResult == WAIT_FAILED) {
+            Exported.ShowMessage("Warning: Failed to wait for AI communication thread");
+        }
         CloseHandle(aiThread);
         aiThread = NULL;
     }
