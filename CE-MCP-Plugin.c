@@ -405,6 +405,25 @@ void ExecuteAICommand(AICommand* cmd) {
         } else {
             Exported.ShowMessage("Error: Missing address parameter for DISASSEMBLE");
         }
+    } else if (strcmp(cmd->command, "DISASSEMBLE_EX") == 0) {
+        // 格式：DISASSEMBLE_EX:address
+        // 使用增强的反汇编功能，提供更详细的指令信息
+        char* addressStr = strtok(cmd->parameters, ",");
+        if (addressStr != NULL) {
+            UINT_PTR address = ParseAddress(addressStr);
+            char output[512];
+            BOOL result = Exported.disassembleEx(address, output, sizeof(output));
+            if (result) {
+                sprintf_s(message, sizeof(message), "DISASSEMBLE_EX result: %d, Address: 0x%IX\nInstruction: %s", 
+                    result, address, output);
+                Exported.ShowMessage(message);
+            } else {
+                sprintf_s(message, sizeof(message), "DISASSEMBLE_EX failed: Address: 0x%IX", address);
+                Exported.ShowMessage(message);
+            }
+        } else {
+            Exported.ShowMessage("Error: Missing address parameter for DISASSEMBLE_EX");
+        }
     } else if (strcmp(cmd->command, "CHANGE_REGISTER") == 0) {
         // 格式：CHANGE_REGISTER:address,register_name,value
         char* addressStr = strtok(cmd->parameters, ",");
