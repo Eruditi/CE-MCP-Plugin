@@ -16,6 +16,8 @@ CE-MCP-Plugin是一个为Cheat Engine开发的AI集成插件，允许Cheat Engin
 
 ### 指令支持
 
+本插件支持**74个命令**，涵盖以下功能类别：
+
 #### 基础功能
 - **SHOW_MESSAGE**: 显示消息框
 - **PAUSE_PROCESS**: 暂停目标进程
@@ -46,6 +48,75 @@ CE-MCP-Plugin是一个为Cheat Engine开发的AI集成插件，允许Cheat Engin
 
 #### 变速齿轮
 - **SPEEDHACK**: 设置游戏速度，格式：`SPEEDHACK:speed_value`
+
+#### 高级功能
+- **GET_ADDRESS_FROM_POINTER**: 通过基址和偏移获取最终地址
+- **ADDRESS_TO_NAME**: 将地址转换为符号名称
+- **NAME_TO_ADDRESS**: 将符号名称转换为地址
+- **PREVIOUS_OPCODE**: 获取指定地址的前一条指令
+- **NEXT_OPCODE**: 获取指定地址的下一条指令
+- **SET_BREAKPOINT**: 设置断点
+- **REMOVE_BREAKPOINT**: 移除断点
+- **CONTINUE_FROM_BREAKPOINT**: 从断点继续执行
+
+#### 内存表管理（18个命令）
+- **CREATE_TABLE_ENTRY**: 创建新的内存表条目
+- **GET_TABLE_ENTRY**: 获取内存表条目
+- **SET_ENTRY_DESCRIPTION**: 设置条目描述
+- **GET_ENTRY_DESCRIPTION**: 获取条目描述
+- **SET_ENTRY_ADDRESS**: 设置条目地址
+- **GET_ENTRY_ADDRESS**: 获取条目地址
+- **SET_ENTRY_TYPE**: 设置条目类型
+- **GET_ENTRY_TYPE**: 获取条目类型
+- **SET_ENTRY_VALUE**: 设置条目值
+- **GET_ENTRY_VALUE**: 获取条目值
+- **SET_ENTRY_SCRIPT**: 设置条目脚本
+- **GET_ENTRY_SCRIPT**: 获取条目脚本
+- **SET_ENTRY_COLOR**: 设置条目颜色
+- **FREEZE_ENTRY**: 冻结条目
+- **UNFREEZE_ENTRY**: 解冻条目
+- **IS_ENTRY_FROZEN**: 检查条目是否冻结
+- **MEMREC_APPENDTOENTRY**: 追加到条目
+- **DELETE_ENTRY**: 删除条目
+
+#### 窗口管理（10个命令）
+- **GET_MAIN_WINDOW_HANDLE**: 获取主窗口句柄
+- **HIDE_ALL_CE_WINDOWS**: 隐藏所有CE窗口
+- **UNHIDE_MAIN_CE_WINDOW**: 显示主CE窗口
+- **MESSAGE_DIALOG**: 显示消息对话框
+- **CLOSE_CE**: 关闭Cheat Engine
+- **FORM_CENTER_SCREEN**: 表单居中
+- **FORM_HIDE**: 隐藏表单
+- **FORM_SHOW**: 显示表单
+- **IMAGE_LOAD_IMAGE_FROM_FILE**: 从文件加载图像
+- **IMAGE_TRANSPARENT**: 设置图像透明度
+- **IMAGE_STRETCH**: 拉伸图像
+
+#### UI控件管理（13个命令）
+- **CREATE_PANEL**: 创建面板
+- **CREATE_BUTTON**: 创建按钮
+- **CREATE_LABEL**: 创建标签
+- **CREATE_EDIT**: 创建编辑框
+- **CREATE_COMBO_BOX**: 创建下拉框
+- **CREATE_CHECK_BOX**: 创建复选框
+- **CREATE_TIMER**: 创建定时器
+- **TIMER_SET_INTERVAL**: 设置定时器间隔
+- **CREATE_MEMO**: 创建备忘录
+- **CREATE_GROUP_BOX**: 创建分组框
+- **CONTROL_SET_CAPTION**: 设置控件标题
+- **CONTROL_GET_CAPTION**: 获取控件标题
+- **CONTROL_SET_POSITION**: 设置控件位置
+- **CONTROL_GET_POSITION**: 获取控件位置
+- **CONTROL_SET_SIZE**: 设置控件大小
+- **CONTROL_GET_SIZE**: 获取控件大小
+- **DESTROY_OBJECT**: 销毁对象
+
+#### 其他功能
+- **LOAD_MODULE**: 加载模块
+- **GENERATE_API_HOOK_SCRIPT**: 生成API Hook脚本
+- **DEBUG_PROCESS**: 调试进程
+- **AA_ADD_COMMAND**: 添加AutoAssembler命令
+- **AA_DEL_COMMAND**: 删除AutoAssembler命令
 
 ### Cheat Engine集成
 - 注册主菜单插件，快捷键Ctrl+A
