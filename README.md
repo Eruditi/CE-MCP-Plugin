@@ -16,7 +16,7 @@ CE-MCP-Plugin是一个为Cheat Engine开发的AI集成插件，允许Cheat Engin
 
 ### 指令支持
 
-本插件支持**74个命令**，涵盖以下功能类别：
+本插件支持**75个命令**，涵盖以下功能类别：
 
 #### 基础功能
 - **SHOW_MESSAGE**: 显示消息框
@@ -80,7 +80,7 @@ CE-MCP-Plugin是一个为Cheat Engine开发的AI集成插件，允许Cheat Engin
 - **MEMREC_APPENDTOENTRY**: 追加到条目
 - **DELETE_ENTRY**: 删除条目
 
-#### 窗口管理（10个命令）
+#### 窗口管理（11个命令）
 - **GET_MAIN_WINDOW_HANDLE**: 获取主窗口句柄
 - **HIDE_ALL_CE_WINDOWS**: 隐藏所有CE窗口
 - **UNHIDE_MAIN_CE_WINDOW**: 显示主CE窗口
@@ -193,7 +193,7 @@ print(result)
 
 ```
 CE-MCP-Plugin/
-├── CE-MCP-Plugin.c          # 主源代码文件（1592行，74个命令）
+├── CE-MCP-Plugin.c          # 主源代码文件（1611行，75个命令）
 ├── CE-MCP-Plugin.def        # DLL导出函数定义
 ├── CE-MCP-Plugin.sln        # Visual Studio解决方案
 ├── CE-MCP-Plugin.vcxproj    # Visual Studio项目文件
