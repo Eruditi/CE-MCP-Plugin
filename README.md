@@ -34,6 +34,7 @@ CE-MCP-Plugin是一个为Cheat Engine开发的AI集成插件，允许Cheat Engin
 - **AUTO_ASSEMBLE**: 执行自动汇编脚本
 - **ASSEMBLE**: 汇编指令，格式：`ASSEMBLE:address,instruction`
 - **DISASSEMBLE**: 反汇编指令，格式：`DISASSEMBLE:address`
+- **DISASSEMBLE_EX**: 增强反汇编指令，提供更详细的指令信息，格式：`DISASSEMBLE_EX:address`
 
 #### 寄存器操作
 - **CHANGE_REGISTER**: 修改寄存器，格式：`CHANGE_REGISTER:address,register_name,value`
