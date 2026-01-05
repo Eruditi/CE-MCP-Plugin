@@ -563,6 +563,149 @@ void ExecuteAICommand(AICommand* cmd) {
         } else {
             Exported.ShowMessage("Error: Missing process_id parameter for OPEN_PROCESS");
         }
+    } else if (strcmp(cmd->command, "GET_ADDRESS_FROM_POINTER") == 0) {
+        // 格式：GET_ADDRESS_FROM_POINTER:base_address,offset_count,offset1,offset2,...
+        char* baseAddrStr = strtok(cmd->parameters, ",");
+        if (baseAddrStr != NULL) {
+            char* offsetCountStr = strtok(NULL, ",");
+            if (offsetCountStr != NULL) {
+                UINT_PTR baseAddress = ParseAddress(baseAddrStr);
+                int offsetCount = atoi(offsetCountStr);
+                
+                if (offsetCount > 0 && offsetCount <= 16) {
+                    int offsets[16];
+                    int i;
+                    BOOL valid = TRUE;
+                    
+                    for (i = 0; i < offsetCount; i++) {
+                        char* offsetStr = strtok(NULL, ",");
+                        if (offsetStr != NULL) {
+                            offsets[i] = (int)strtol(offsetStr, NULL, 0);
+                        } else {
+                            valid = FALSE;
+                            break;
+                        }
+                    }
+                    
+                    if (valid) {
+                        UINT_PTR finalAddress = Exported.GetAddressFromPointer(baseAddress, offsetCount, offsets);
+                        sprintf_s(message, sizeof(message), "GET_ADDRESS_FROM_POINTER result: Base: 0x%IX, Final: 0x%IX", 
+                            baseAddress, finalAddress);
+                        Exported.ShowMessage(message);
+                    } else {
+                        Exported.ShowMessage("Error: Invalid offset parameters for GET_ADDRESS_FROM_POINTER");
+                    }
+                } else {
+                    Exported.ShowMessage("Error: Invalid offset count for GET_ADDRESS_FROM_POINTER (1-16)");
+                }
+            } else {
+                Exported.ShowMessage("Error: Missing offset_count parameter for GET_ADDRESS_FROM_POINTER");
+            }
+        } else {
+            Exported.ShowMessage("Error: Missing base_address parameter for GET_ADDRESS_FROM_POINTER");
+        }
+    } else if (strcmp(cmd->command, "ADDRESS_TO_NAME") == 0) {
+        // 格式：ADDRESS_TO_NAME:address
+        char* addressStr = strtok(cmd->parameters, ",");
+        if (addressStr != NULL) {
+            UINT_PTR address = ParseAddress(addressStr);
+            char name[256];
+            BOOL result = Exported.sym_addressToName(address, name, sizeof(name));
+            if (result) {
+                sprintf_s(message, sizeof(message), "ADDRESS_TO_NAME result: Address: 0x%IX, Name: %s", address, name);
+            } else {
+                sprintf_s(message, sizeof(message), "ADDRESS_TO_NAME result: Address: 0x%IX, Name: <not found>", address);
+            }
+            Exported.ShowMessage(message);
+        } else {
+            Exported.ShowMessage("Error: Missing address parameter for ADDRESS_TO_NAME");
+        }
+    } else if (strcmp(cmd->command, "NAME_TO_ADDRESS") == 0) {
+        // 格式：NAME_TO_ADDRESS:name
+        char* name = strtok(cmd->parameters, ",");
+        if (name != NULL) {
+            UINT_PTR address;
+            BOOL result = Exported.sym_nameToAddress(name, &address);
+            if (result) {
+                sprintf_s(message, sizeof(message), "NAME_TO_ADDRESS result: Name: %s, Address: 0x%IX", name, address);
+            } else {
+                sprintf_s(message, sizeof(message), "NAME_TO_ADDRESS result: Name: %s, Address: <not found>", name);
+            }
+            Exported.ShowMessage(message);
+        } else {
+            Exported.ShowMessage("Error: Missing name parameter for NAME_TO_ADDRESS");
+        }
+    } else if (strcmp(cmd->command, "PREVIOUS_OPCODE") == 0) {
+        // 格式：PREVIOUS_OPCODE:address
+        char* addressStr = strtok(cmd->parameters, ",");
+        if (addressStr != NULL) {
+            UINT_PTR address = ParseAddress(addressStr);
+            DWORD prevAddr = Exported.previousOpcode(address);
+            sprintf_s(message, sizeof(message), "PREVIOUS_OPCODE result: Current: 0x%IX, Previous: 0x%IX", address, prevAddr);
+            Exported.ShowMessage(message);
+        } else {
+            Exported.ShowMessage("Error: Missing address parameter for PREVIOUS_OPCODE");
+        }
+    } else if (strcmp(cmd->command, "NEXT_OPCODE") == 0) {
+        // 格式：NEXT_OPCODE:address
+        char* addressStr = strtok(cmd->parameters, ",");
+        if (addressStr != NULL) {
+            UINT_PTR address = ParseAddress(addressStr);
+            DWORD nextAddr = Exported.nextOpcode(address);
+            sprintf_s(message, sizeof(message), "NEXT_OPCODE result: Current: 0x%IX, Next: 0x%IX", address, nextAddr);
+            Exported.ShowMessage(message);
+        } else {
+            Exported.ShowMessage("Error: Missing address parameter for NEXT_OPCODE");
+        }
+    } else if (strcmp(cmd->command, "SET_BREAKPOINT") == 0) {
+        // 格式：SET_BREAKPOINT:address,size,trigger
+        // trigger: 0=execute, 1=write, 2=read
+        char* addressStr = strtok(cmd->parameters, ",");
+        if (addressStr != NULL) {
+            char* sizeStr = strtok(NULL, ",");
+            if (sizeStr != NULL) {
+                char* triggerStr = strtok(NULL, ",");
+                if (triggerStr != NULL) {
+                    UINT_PTR address = ParseAddress(addressStr);
+                    int size = atoi(sizeStr);
+                    int trigger = atoi(triggerStr);
+                    
+                    BOOL result = Exported.debug_setBreakpoint(address, size, trigger);
+                    sprintf_s(message, sizeof(message), "SET_BREAKPOINT result: %d, Address: 0x%IX, Size: %d, Trigger: %d", 
+                        result, address, size, trigger);
+                    Exported.ShowMessage(message);
+                } else {
+                    Exported.ShowMessage("Error: Missing trigger parameter for SET_BREAKPOINT");
+                }
+            } else {
+                Exported.ShowMessage("Error: Missing size parameter for SET_BREAKPOINT");
+            }
+        } else {
+            Exported.ShowMessage("Error: Missing address parameter for SET_BREAKPOINT");
+        }
+    } else if (strcmp(cmd->command, "REMOVE_BREAKPOINT") == 0) {
+        // 格式：REMOVE_BREAKPOINT:address
+        char* addressStr = strtok(cmd->parameters, ",");
+        if (addressStr != NULL) {
+            UINT_PTR address = ParseAddress(addressStr);
+            BOOL result = Exported.debug_removeBreakpoint(address);
+            sprintf_s(message, sizeof(message), "REMOVE_BREAKPOINT result: %d, Address: 0x%IX", result, address);
+            Exported.ShowMessage(message);
+        } else {
+            Exported.ShowMessage("Error: Missing address parameter for REMOVE_BREAKPOINT");
+        }
+    } else if (strcmp(cmd->command, "CONTINUE_FROM_BREAKPOINT") == 0) {
+        // 格式：CONTINUE_FROM_BREAKPOINT:continue_option
+        // continue_option: 0=run, 1=step into, 2=step over, 3=step to return
+        char* optionStr = strtok(cmd->parameters, ",");
+        if (optionStr != NULL) {
+            int option = atoi(optionStr);
+            BOOL result = Exported.debug_continueFromBreakpoint(option);
+            sprintf_s(message, sizeof(message), "CONTINUE_FROM_BREAKPOINT result: %d, Option: %d", result, option);
+            Exported.ShowMessage(message);
+        } else {
+            Exported.ShowMessage("Error: Missing continue_option parameter for CONTINUE_FROM_BREAKPOINT");
+        }
     } else {
         sprintf_s(message, sizeof(message), "Unknown command: %s", cmd->command);
         Exported.ShowMessage(message);
