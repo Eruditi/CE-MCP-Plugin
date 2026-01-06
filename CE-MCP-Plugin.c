@@ -1562,7 +1562,7 @@ BOOL __stdcall CEPlugin_InitializePlugin(PExportedFunctions ef, int pluginid) {
     
     int mainMenuPluginID = Exported.RegisterFunction(pluginid, ptMainMenu, &init5);
     if (mainMenuPluginID == -1) {
-        Exported.ShowMessage("Failed to register main menu plugin");
+        // Silent failure - don't block CE initialization
         DeleteCriticalSection(&aiCriticalSection);
         return FALSE;
     }
@@ -1571,9 +1571,8 @@ BOOL __stdcall CEPlugin_InitializePlugin(PExportedFunctions ef, int pluginid) {
     lua_State* lua_state = ef->GetLuaState();
     if (lua_state != NULL) {
         lua_register(lua_state, "aiSendCommand", lua_aiSendCommand);
-    } else {
-        Exported.ShowMessage("Warning: Failed to get Lua state, Lua functions will not be available");
     }
+    // If Lua state is NULL, silently continue without Lua support
     
     // Start AI communication thread (connection will be attempted in the thread)
     EnterCriticalSection(&aiCriticalSection);
@@ -1586,7 +1585,7 @@ BOOL __stdcall CEPlugin_InitializePlugin(PExportedFunctions ef, int pluginid) {
         isRunning = FALSE;
     }
     
-    Exported.ShowMessage("CE-MCP-Plugin enabled");
+    // Plugin enabled successfully - silent, no UI message to avoid blocking
     return TRUE;
 }
 
@@ -1614,7 +1613,7 @@ BOOL __stdcall CEPlugin_DisablePlugin(void) {
     // Delete critical section
     DeleteCriticalSection(&aiCriticalSection);
     
-    Exported.ShowMessage("CE-MCP-Plugin disabled");
+    // Plugin disabled successfully - silent, no UI message to avoid blocking
     return TRUE;
 }
 
