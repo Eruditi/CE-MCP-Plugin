@@ -61,7 +61,7 @@ BOOL ConnectToAIServer() {
     
     int iResult = getaddrinfo(aiServerIP, portStr, &hints, &result);
     if (iResult != 0) {
-        Exported.ShowMessage("getaddrinfo failed");
+        // Silent failure - don't block UI
         return FALSE;
     }
 
@@ -70,7 +70,7 @@ BOOL ConnectToAIServer() {
         // Create a SOCKET for connecting to server
         aiSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
         if (aiSocket == INVALID_SOCKET) {
-            Exported.ShowMessage("socket failed");
+            // Silent failure - don't block UI
             // Don't freeaddrinfo here, we'll do it after the loop
             continue;
         }
@@ -78,7 +78,7 @@ BOOL ConnectToAIServer() {
         // Set socket to non-blocking mode for timeout
         u_long mode = 1;
         if (ioctlsocket(aiSocket, FIONBIO, &mode) == SOCKET_ERROR) {
-            Exported.ShowMessage("ioctlsocket failed to set non-blocking mode");
+            // Silent failure - don't block UI
             closesocket(aiSocket);
             aiSocket = INVALID_SOCKET;
             continue;
@@ -107,16 +107,12 @@ BOOL ConnectToAIServer() {
             
             iResult = select(0, NULL, &writefds, &exceptfds, &timeout);
             if (iResult == 0) {
-                // Connection timeout
+                // Connection timeout - silent failure, don't block UI
                 closesocket(aiSocket);
                 aiSocket = INVALID_SOCKET;
-                Exported.ShowMessage("Connection to AI server timed out");
                 continue;
             } else if (iResult == SOCKET_ERROR) {
-                int selectError = WSAGetLastError();
-                char errorMsg[128];
-                sprintf_s(errorMsg, sizeof(errorMsg), "select failed with error: %d", selectError);
-                Exported.ShowMessage(errorMsg);
+                // select error - silent failure, don't block UI
                 closesocket(aiSocket);
                 aiSocket = INVALID_SOCKET;
                 continue;
@@ -133,7 +129,7 @@ BOOL ConnectToAIServer() {
         // Set socket back to blocking mode
         mode = 0;
         if (ioctlsocket(aiSocket, FIONBIO, &mode) == SOCKET_ERROR) {
-            Exported.ShowMessage("ioctlsocket failed to set blocking mode");
+            // Silent failure - don't block UI
             closesocket(aiSocket);
             aiSocket = INVALID_SOCKET;
             freeaddrinfo(result);
@@ -146,11 +142,11 @@ BOOL ConnectToAIServer() {
     freeaddrinfo(result);
 
     if (aiSocket == INVALID_SOCKET) {
-        Exported.ShowMessage("Failed to connect to AI server");
+        // Silent failure - don't block UI
         return FALSE;
     }
 
-    Exported.ShowMessage("Connected to AI server");
+    // Success - but don't show message to avoid blocking
     return TRUE;
 }
 
@@ -1428,6 +1424,12 @@ DWORD WINAPI AICommunicationThread(LPVOID lpParam) {
     char recvBuffer[1024];
     int iResult;
     
+    // Try to connect to AI server
+    if (!ConnectToAIServer()) {
+        // Connection failed, but continue running the thread
+        // It will retry when isRunning is TRUE
+    }
+    
     while (isRunning) {
         // Receive data from AI server
         EnterCriticalSection(&aiCriticalSection);
@@ -1449,13 +1451,19 @@ DWORD WINAPI AICommunicationThread(LPVOID lpParam) {
                 ExecuteAICommand(&cmd);
             }
         } else if (iResult == 0) {
-            Exported.ShowMessage("Connection to AI server closed");
-            break;
+            // Connection closed by server
+            EnterCriticalSection(&aiCriticalSection);
+            closesocket(aiSocket);
+            aiSocket = INVALID_SOCKET;
+            LeaveCriticalSection(&aiCriticalSection);
         } else {
             int error = WSAGetLastError();
             if (error != WSAEWOULDBLOCK) {
-                Exported.ShowMessage("recv failed");
-                break;
+                // Connection error, close socket
+                EnterCriticalSection(&aiCriticalSection);
+                closesocket(aiSocket);
+                aiSocket = INVALID_SOCKET;
+                LeaveCriticalSection(&aiCriticalSection);
             }
         }
         
@@ -1477,8 +1485,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
         case DLL_PROCESS_ATTACH:
             // Initialize Winsock when DLL is loaded
             InitWinsock();
-            // Initialize critical section for thread synchronization
-            InitializeCriticalSection(&aiCriticalSection);
+            // Note: Critical section will be initialized in CEPlugin_InitializePlugin
             break;
 
         case DLL_THREAD_ATTACH:
@@ -1488,8 +1495,8 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
         case DLL_PROCESS_DETACH:
             // Cleanup Winsock when DLL is unloaded
             CleanupWinsock();
-            // Delete critical section
-            DeleteCriticalSection(&aiCriticalSection);
+            // Delete critical section if it was initialized
+            // Note: It will be deleted in CEPlugin_DisablePlugin
             break;
     }
     
@@ -1545,6 +1552,9 @@ BOOL __stdcall CEPlugin_InitializePlugin(PExportedFunctions ef, int pluginid) {
         return FALSE;
     }
 
+    // Initialize critical section for thread synchronization
+    InitializeCriticalSection(&aiCriticalSection);
+
     // Register main menu plugin
     init5.name = "CE-MCP-Plugin";
     init5.callbackroutine = mainmenuplugin;
@@ -1553,6 +1563,7 @@ BOOL __stdcall CEPlugin_InitializePlugin(PExportedFunctions ef, int pluginid) {
     int mainMenuPluginID = Exported.RegisterFunction(pluginid, ptMainMenu, &init5);
     if (mainMenuPluginID == -1) {
         Exported.ShowMessage("Failed to register main menu plugin");
+        DeleteCriticalSection(&aiCriticalSection);
         return FALSE;
     }
     
@@ -1564,20 +1575,15 @@ BOOL __stdcall CEPlugin_InitializePlugin(PExportedFunctions ef, int pluginid) {
         Exported.ShowMessage("Warning: Failed to get Lua state, Lua functions will not be available");
     }
     
-    // Connect to AI server
-    if (ConnectToAIServer()) {
-        // Start AI communication thread
-        EnterCriticalSection(&aiCriticalSection);
-        isRunning = TRUE;
-        aiThread = CreateThread(NULL, 0, AICommunicationThread, NULL, 0, NULL);
-        LeaveCriticalSection(&aiCriticalSection);
-        
-        if (aiThread == NULL) {
-            Exported.ShowMessage("Failed to create AI communication thread");
-            isRunning = FALSE;
-            DisconnectFromAIServer();
-            return FALSE;
-        }
+    // Start AI communication thread (connection will be attempted in the thread)
+    EnterCriticalSection(&aiCriticalSection);
+    isRunning = TRUE;
+    aiThread = CreateThread(NULL, 0, AICommunicationThread, NULL, 0, NULL);
+    LeaveCriticalSection(&aiCriticalSection);
+    
+    if (aiThread == NULL) {
+        // Silent failure - don't block CE initialization
+        isRunning = FALSE;
     }
     
     Exported.ShowMessage("CE-MCP-Plugin enabled");
@@ -1593,10 +1599,10 @@ BOOL __stdcall CEPlugin_DisablePlugin(void) {
     if (aiThread != NULL) {
         DWORD waitResult = WaitForSingleObject(aiThread, 5000);
         if (waitResult == WAIT_TIMEOUT) {
-            Exported.ShowMessage("Warning: AI communication thread did not stop gracefully");
             // Thread is still running, but we'll proceed with cleanup
+            // Don't show message to avoid blocking
         } else if (waitResult == WAIT_FAILED) {
-            Exported.ShowMessage("Warning: Failed to wait for AI communication thread");
+            // Don't show message to avoid blocking
         }
         CloseHandle(aiThread);
         aiThread = NULL;
@@ -1604,6 +1610,9 @@ BOOL __stdcall CEPlugin_DisablePlugin(void) {
     
     // Disconnect from AI server
     DisconnectFromAIServer();
+    
+    // Delete critical section
+    DeleteCriticalSection(&aiCriticalSection);
     
     Exported.ShowMessage("CE-MCP-Plugin disabled");
     return TRUE;
