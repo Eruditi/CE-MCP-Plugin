@@ -1,0 +1,606 @@
+
+{
+  "name": "CE-MCP-Plugin",
+  "version": "1.0.0",
+  "description": "Cheat Engine MCP (Memory Cheat Plugin) - AI Integration Plugin for Cheat Engine",
+  "author": "Eruditi",
+  "license": "MIT",
+  
+  "mcp": {
+    "type": "plugin",
+    "protocol_version": "1.0",
+    "server": {
+      "host": "127.0.0.1",
+      "port": 8888,
+      "connection_type": "tcp"
+    },
+    "capabilities": {
+      "memory_operations": true,
+      "process_control": true,
+      "debugging": true,
+      "ui_automation": true,
+      "assembly_integration": true,
+      "table_management": true,
+      "window_management": true
+    }
+  },
+
+  "commands": {
+    "count": 75,
+    "categories": [
+      {
+        "name": "basic",
+        "display_name": "基础功能",
+        "commands": [
+          {
+            "name": "SHOW_MESSAGE",
+            "description": "显示消息框",
+            "syntax": "SHOW_MESSAGE:message",
+            "example": "SHOW_MESSAGE:Hello World"
+          },
+          {
+            "name": "PAUSE_PROCESS",
+            "description": "暂停目标进程",
+            "syntax": "PAUSE_PROCESS",
+            "example": "PAUSE_PROCESS"
+          },
+          {
+            "name": "UNPAUSE_PROCESS",
+            "description": "恢复目标进程",
+            "syntax": "UNPAUSE_PROCESS",
+            "example": "UNPAUSE_PROCESS"
+          }
+        ]
+      },
+      {
+        "name": "memory_operations",
+        "display_name": "内存操作",
+        "commands": [
+          {
+            "name": "READ_MEMORY",
+            "description": "读取内存",
+            "syntax": "READ_MEMORY:address,type",
+            "example": "READ_MEMORY:0x00400000,byte"
+          },
+          {
+            "name": "WRITE_MEMORY",
+            "description": "写入内存",
+            "syntax": "WRITE_MEMORY:address,value,type",
+            "example": "WRITE_MEMORY:0x00400000,90,dword"
+          },
+          {
+            "name": "FREEZE_MEMORY",
+            "description": "冻结内存",
+            "syntax": "FREEZE_MEMORY:address,size",
+            "example": "FREEZE_MEMORY:0x00400000,4"
+          },
+          {
+            "name": "UNFREEZE_MEMORY",
+            "description": "解冻内存",
+            "syntax": "UNFREEZE_MEMORY:freeze_id",
+            "example": "UNFREEZE_MEMORY:1"
+          },
+          {
+            "name": "FIX_MEMORY",
+            "description": "修复内存",
+            "syntax": "FIX_MEMORY",
+            "example": "FIX_MEMORY"
+          }
+        ]
+      },
+      {
+        "name": "assembly",
+        "display_name": "汇编与反汇编",
+        "commands": [
+          {
+            "name": "AUTO_ASSEMBLE",
+            "description": "执行自动汇编脚本",
+            "syntax": "AUTO_ASSEMBLE:script",
+            "example": "AUTO_ASSEMBLE:alloc(newmem,2048)"
+          },
+          {
+            "name": "ASSEMBLE",
+            "description": "汇编指令",
+            "syntax": "ASSEMBLE:address,instruction",
+            "example": "ASSEMBLE:0x00400000,nop"
+          },
+          {
+            "name": "DISASSEMBLE",
+            "description": "反汇编指令",
+            "syntax": "DISASSEMBLE:address",
+            "example": "DISASSEMBLE:0x00400000"
+          },
+          {
+            "name": "DISASSEMBLE_EX",
+            "description": "增强反汇编指令，提供更详细的指令信息",
+            "syntax": "DISASSEMBLE_EX:address",
+            "example": "DISASSEMBLE_EX:0x00400000"
+          }
+        ]
+      },
+      {
+        "name": "register_operations",
+        "display_name": "寄存器操作",
+        "commands": [
+          {
+            "name": "CHANGE_REGISTER",
+            "description": "修改寄存器",
+            "syntax": "CHANGE_REGISTER:address,register_name,value",
+            "example": "CHANGE_REGISTER:0x00400000,EAX,0"
+          }
+        ]
+      },
+      {
+        "name": "dll_injection",
+        "display_name": "DLL注入",
+        "commands": [
+          {
+            "name": "INJECT_DLL",
+            "description": "注入DLL",
+            "syntax": "INJECT_DLL:dll_path,optional_function_name",
+            "example": "INJECT_DLL:C:\\myhack.dll"
+          }
+        ]
+      },
+      {
+        "name": "process_management",
+        "display_name": "进程管理",
+        "commands": [
+          {
+            "name": "PROCESS_LIST",
+            "description": "获取进程列表",
+            "syntax": "PROCESS_LIST",
+            "example": "PROCESS_LIST"
+          },
+          {
+            "name": "GET_PROCESS_ID",
+            "description": "根据进程名获取进程ID",
+            "syntax": "GET_PROCESS_ID:process_name",
+            "example": "GET_PROCESS_ID:game.exe"
+          },
+          {
+            "name": "OPEN_PROCESS",
+            "description": "打开进程",
+            "syntax": "OPEN_PROCESS:process_id",
+            "example": "OPEN_PROCESS:1234"
+          }
+        ]
+      },
+      {
+        "name": "speedhack",
+        "display_name": "变速齿轮",
+        "commands": [
+          {
+            "name": "SPEEDHACK",
+            "description": "设置游戏速度",
+            "syntax": "SPEEDHACK:speed_value",
+            "example": "SPEEDHACK:2.0"
+          }
+        ]
+      },
+      {
+        "name": "advanced",
+        "display_name": "高级功能",
+        "commands": [
+          {
+            "name": "GET_ADDRESS_FROM_POINTER",
+            "description": "通过基址和偏移获取最终地址",
+            "syntax": "GET_ADDRESS_FROM_POINTER:base_address,offset_count,offset1,offset2,...",
+            "example": "GET_ADDRESS_FROM_POINTER:0x00400000,2,0x10,0x20"
+          },
+          {
+            "name": "ADDRESS_TO_NAME",
+            "description": "将地址转换为符号名称",
+            "syntax": "ADDRESS_TO_NAME:address",
+            "example": "ADDRESS_TO_NAME:0x00400000"
+          },
+          {
+            "name": "NAME_TO_ADDRESS",
+            "description": "将符号名称转换为地址",
+            "syntax": "NAME_TO_ADDRESS:name",
+            "example": "NAME_TO_ADDRESS:game.exe+1000"
+          },
+          {
+            "name": "PREVIOUS_OPCODE",
+            "description": "获取指定地址的前一条指令",
+            "syntax": "PREVIOUS_OPCODE:address",
+            "example": "PREVIOUS_OPCODE:0x00400000"
+          },
+          {
+            "name": "NEXT_OPCODE",
+            "description": "获取指定地址的下一条指令",
+            "syntax": "NEXT_OPCODE:address",
+            "example": "NEXT_OPCODE:0x00400000"
+          },
+          {
+            "name": "SET_BREAKPOINT",
+            "description": "设置断点",
+            "syntax": "SET_BREAKPOINT:address,size,trigger",
+            "example": "SET_BREAKPOINT:0x00400000,1,0"
+          },
+          {
+            "name": "REMOVE_BREAKPOINT",
+            "description": "移除断点",
+            "syntax": "REMOVE_BREAKPOINT:address",
+            "example": "REMOVE_BREAKPOINT:0x00400000"
+          },
+          {
+            "name": "CONTINUE_FROM_BREAKPOINT",
+            "description": "从断点继续执行",
+            "syntax": "CONTINUE_FROM_BREAKPOINT:continue_option",
+            "example": "CONTINUE_FROM_BREAKPOINT:0"
+          }
+        ]
+      },
+      {
+        "name": "table_management",
+        "display_name": "内存表管理",
+        "commands": [
+          {
+            "name": "CREATE_TABLE_ENTRY",
+            "description": "创建新的内存表条目",
+            "syntax": "CREATE_TABLE_ENTRY:description,address,type",
+            "example": "CREATE_TABLE_ENTRY:Health,0x00400000,4"
+          },
+          {
+            "name": "GET_TABLE_ENTRY",
+            "description": "获取内存表条目",
+            "syntax": "GET_TABLE_ENTRY:index",
+            "example": "GET_TABLE_ENTRY:0"
+          },
+          {
+            "name": "SET_ENTRY_DESCRIPTION",
+            "description": "设置条目描述",
+            "syntax": "SET_ENTRY_DESCRIPTION:index,description",
+            "example": "SET_ENTRY_DESCRIPTION:0,Health"
+          },
+          {
+            "name": "GET_ENTRY_DESCRIPTION",
+            "description": "获取条目描述",
+            "syntax": "GET_ENTRY_DESCRIPTION:index",
+            "example": "GET_ENTRY_DESCRIPTION:0"
+          },
+          {
+            "name": "SET_ENTRY_ADDRESS",
+            "description": "设置条目地址",
+            "syntax": "SET_ENTRY_ADDRESS:index,address",
+            "example": "SET_ENTRY_ADDRESS:0,0x00400000"
+          },
+          {
+            "name": "GET_ENTRY_ADDRESS",
+            "description": "获取条目地址",
+            "syntax": "GET_ENTRY_ADDRESS:index",
+            "example": "GET_ENTRY_ADDRESS:0"
+          },
+          {
+            "name": "SET_ENTRY_TYPE",
+            "description": "设置条目类型",
+            "syntax": "SET_ENTRY_TYPE:index,type",
+            "example": "SET_ENTRY_TYPE:0,4"
+          },
+          {
+            "name": "GET_ENTRY_TYPE",
+            "description": "获取条目类型",
+            "syntax": "GET_ENTRY_TYPE:index",
+            "example": "GET_ENTRY_TYPE:0"
+          },
+          {
+            "name": "SET_ENTRY_VALUE",
+            "description": "设置条目值",
+            "syntax": "SET_ENTRY_VALUE:index,value",
+            "example": "SET_ENTRY_VALUE:0,100"
+          },
+          {
+            "name": "GET_ENTRY_VALUE",
+            "description": "获取条目值",
+            "syntax": "GET_ENTRY_VALUE:index",
+            "example": "GET_ENTRY_VALUE:0"
+          },
+          {
+            "name": "SET_ENTRY_SCRIPT",
+            "description": "设置条目脚本",
+            "syntax": "SET_ENTRY_SCRIPT:index,script",
+            "example": "SET_ENTRY_SCRIPT:0,cmp eax,100"
+          },
+          {
+            "name": "GET_ENTRY_SCRIPT",
+            "description": "获取条目脚本",
+            "syntax": "GET_ENTRY_SCRIPT:index",
+            "example": "GET_ENTRY_SCRIPT:0"
+          },
+          {
+            "name": "SET_ENTRY_COLOR",
+            "description": "设置条目颜色",
+            "syntax": "SET_ENTRY_COLOR:index,color",
+            "example": "SET_ENTRY_COLOR:0,0xFF0000"
+          },
+          {
+            "name": "FREEZE_ENTRY",
+            "description": "冻结条目",
+            "syntax": "FREEZE_ENTRY:index",
+            "example": "FREEZE_ENTRY:0"
+          },
+          {
+            "name": "UNFREEZE_ENTRY",
+            "description": "解冻条目",
+            "syntax": "UNFREEZE_ENTRY:index",
+            "example": "UNFREEZE_ENTRY:0"
+          },
+          {
+            "name": "IS_ENTRY_FROZEN",
+            "description": "检查条目是否冻结",
+            "syntax": "IS_ENTRY_FROZEN:index",
+            "example": "IS_ENTRY_FROZEN:0"
+          },
+          {
+            "name": "MEMREC_APPENDTOENTRY",
+            "description": "追加到条目",
+            "syntax": "MEMREC_APPENDTOENTRY:source_index,target_index",
+            "example": "MEMREC_APPENDTOENTRY:0,1"
+          },
+          {
+            "name": "DELETE_ENTRY",
+            "description": "删除条目",
+            "syntax": "DELETE_ENTRY:index",
+            "example": "DELETE_ENTRY:0"
+          }
+        ]
+      },
+      {
+        "name": "window_management",
+        "display_name": "窗口管理",
+        "commands": [
+          {
+            "name": "GET_MAIN_WINDOW_HANDLE",
+            "description": "获取主窗口句柄",
+            "syntax": "GET_MAIN_WINDOW_HANDLE",
+            "example": "GET_MAIN_WINDOW_HANDLE"
+          },
+          {
+            "name": "HIDE_ALL_CE_WINDOWS",
+            "description": "隐藏所有CE窗口",
+            "syntax": "HIDE_ALL_CE_WINDOWS",
+            "example": "HIDE_ALL_CE_WINDOWS"
+          },
+          {
+            "name": "UNHIDE_MAIN_CE_WINDOW",
+            "description": "显示主CE窗口",
+            "syntax": "UNHIDE_MAIN_CE_WINDOW",
+            "example": "UNHIDE_MAIN_CE_WINDOW"
+          },
+          {
+            "name": "MESSAGE_DIALOG",
+            "description": "显示消息对话框",
+            "syntax": "MESSAGE_DIALOG:title,message",
+            "example": "MESSAGE_DIALOG:Alert,Game Found"
+          },
+          {
+            "name": "CLOSE_CE",
+            "description": "关闭Cheat Engine",
+            "syntax": "CLOSE_CE",
+            "example": "CLOSE_CE"
+          },
+          {
+            "name": "FORM_CENTER_SCREEN",
+            "description": "表单居中",
+            "syntax": "FORM_CENTER_SCREEN:form_handle",
+            "example": "FORM_CENTER_SCREEN:0x00100000"
+          },
+          {
+            "name": "FORM_HIDE",
+            "description": "隐藏表单",
+            "syntax": "FORM_HIDE:form_handle",
+            "example": "FORM_HIDE:0x00100000"
+          },
+          {
+            "name": "FORM_SHOW",
+            "description": "显示表单",
+            "syntax": "FORM_SHOW:form_handle",
+            "example": "FORM_SHOW:0x00100000"
+          },
+          {
+            "name": "IMAGE_LOAD_IMAGE_FROM_FILE",
+            "description": "从文件加载图像",
+            "syntax": "IMAGE_LOAD_IMAGE_FROM_FILE:image_control_handle,file_path",
+            "example": "IMAGE_LOAD_IMAGE_FROM_FILE:0x00200000,C:\\image.png"
+          },
+          {
+            "name": "IMAGE_TRANSPARENT",
+            "description": "设置图像透明度",
+            "syntax": "IMAGE_TRANSPARENT:image_control_handle,transparent",
+            "example": "IMAGE_TRANSPARENT:0x00200000,true"
+          },
+          {
+            "name": "IMAGE_STRETCH",
+            "description": "拉伸图像",
+            "syntax": "IMAGE_STRETCH:image_control_handle,stretch",
+            "example": "IMAGE_STRETCH:0x00200000,true"
+          }
+        ]
+      },
+      {
+        "name": "ui_controls",
+        "display_name": "UI控件管理",
+        "commands": [
+          {
+            "name": "CREATE_PANEL",
+            "description": "创建面板",
+            "syntax": "CREATE_PANEL:x,y,width,height",
+            "example": "CREATE_PANEL:10,10,200,100"
+          },
+          {
+            "name": "CREATE_BUTTON",
+            "description": "创建按钮",
+            "syntax": "CREATE_BUTTON:x,y,width,height,caption,callback",
+            "example": "CREATE_BUTTON:10,10,100,30,Click Me,OnClick"
+          },
+          {
+            "name": "CREATE_LABEL",
+            "description": "创建标签",
+            "syntax": "CREATE_LABEL:x,y,width,height,caption",
+            "example": "CREATE_LABEL:10,10,100,30,Hello"
+          },
+          {
+            "name": "CREATE_EDIT",
+            "description": "创建编辑框",
+            "syntax": "CREATE_EDIT:x,y,width,default_text",
+            "example": "CREATE_EDIT:10,10,200,30,Enter text"
+          },
+          {
+            "name": "CREATE_COMBO_BOX",
+            "description": "创建下拉框",
+            "syntax": "CREATE_COMBO_BOX:x,y,width,height,options",
+            "example": "CREATE_COMBO_BOX:10,10,200,30,Option1|Option2|Option3"
+          },
+          {
+            "name": "CREATE_CHECK_BOX",
+            "description": "创建复选框",
+            "syntax": "CREATE_CHECK_BOX:x,y,width,height,caption",
+            "example": "CREATE_CHECK_BOX:10,10,100,30,Enable"
+          },
+          {
+            "name": "CREATE_TIMER",
+            "description": "创建定时器",
+            "syntax": "CREATE_TIMER:interval,callback",
+            "example": "CREATE_TIMER:1000,OnTimer"
+          },
+          {
+            "name": "TIMER_SET_INTERVAL",
+            "description": "设置定时器间隔",
+            "syntax": "TIMER_SET_INTERVAL:timer_handle,interval",
+            "example": "TIMER_SET_INTERVAL:0x00300000,2000"
+          },
+          {
+            "name": "CREATE_MEMO",
+            "description": "创建备忘录",
+            "syntax": "CREATE_MEMO:x,y,width,height,lines",
+            "example": "CREATE_MEMO:10,10,200,100,5"
+          },
+          {
+            "name": "CREATE_GROUP_BOX",
+            "description": "创建分组框",
+            "syntax": "CREATE_GROUP_BOX:x,y,width,height,caption",
+            "example": "CREATE_GROUP_BOX:10,10,200,100,Settings"
+          },
+          {
+            "name": "CONTROL_SET_CAPTION",
+            "description": "设置控件标题",
+            "syntax": "CONTROL_SET_CAPTION:control_handle,caption",
+            "example": "CONTROL_SET_CAPTION:0x00400000,New Title"
+          },
+          {
+            "name": "CONTROL_GET_CAPTION",
+            "description": "获取控件标题",
+            "syntax": "CONTROL_GET_CAPTION:control_handle",
+            "example": "CONTROL_GET_CAPTION:0x00400000"
+          },
+          {
+            "name": "CONTROL_SET_POSITION",
+            "description": "设置控件位置",
+            "syntax": "CONTROL_SET_POSITION:control_handle,x,y",
+            "example": "CONTROL_SET_POSITION:0x00400000,20,20"
+          },
+          {
+            "name": "CONTROL_GET_POSITION",
+            "description": "获取控件位置",
+            "syntax": "CONTROL_GET_POSITION:control_handle",
+            "example": "CONTROL_GET_POSITION:0x00400000"
+          },
+          {
+            "name": "CONTROL_SET_SIZE",
+            "description": "设置控件大小",
+            "syntax": "CONTROL_SET_SIZE:control_handle,width,height",
+            "example": "CONTROL_SET_SIZE:0x00400000,150,50"
+          },
+          {
+            "name": "CONTROL_GET_SIZE",
+            "description": "获取控件大小",
+            "syntax": "CONTROL_GET_SIZE:control_handle",
+            "example": "CONTROL_GET_SIZE:0x00400000"
+          },
+          {
+            "name": "DESTROY_OBJECT",
+            "description": "销毁对象",
+            "syntax": "DESTROY_OBJECT:object_handle",
+            "example": "DESTROY_OBJECT:0x00400000"
+          }
+        ]
+      },
+      {
+        "name": "other",
+        "display_name": "其他功能",
+        "commands": [
+          {
+            "name": "LOAD_MODULE",
+            "description": "加载模块",
+            "syntax": "LOAD_MODULE:module_path",
+            "example": "LOAD_MODULE:C:\\game\\module.dll"
+          },
+          {
+            "name": "GENERATE_API_HOOK_SCRIPT",
+            "description": "生成API Hook脚本",
+            "syntax": "GENERATE_API_HOOK_SCRIPT:api_name,hook_function",
+            "example": "GENERATE_API_HOOK_SCRIPT:kernel32.dll,WriteProcessMemory"
+          },
+          {
+            "name": "DEBUG_PROCESS",
+            "description": "调试进程",
+            "syntax": "DEBUG_PROCESS:process_id",
+            "example": "DEBUG_PROCESS:1234"
+          },
+          {
+            "name": "AA_ADD_COMMAND",
+            "description": "添加AutoAssembler命令",
+            "syntax": "AA_ADD_COMMAND:command",
+            "example": "AA_ADD_COMMAND:alloc(newmem,2048)"
+          },
+          {
+            "name": "AA_DEL_COMMAND",
+            "description": "删除AutoAssembler命令",
+            "syntax": "AA_DEL_COMMAND:command_id",
+            "example": "AA_DEL_COMMAND:1"
+          }
+        ]
+      }
+    ]
+  },
+
+  "lua_api": {
+    "function": "aiSendCommand",
+    "description": "通过Lua脚本向AI服务器发送命令",
+    "syntax": "aiSendCommand(command_string)",
+    "example": "aiSendCommand('READ_MEMORY:0x00400000,byte')"
+  },
+
+  "installation": {
+    "dll_path": "CE-MCP-Plugin.dll",
+    "target_directory": "Cheat Engine/plugins",
+    "supported_platforms": ["Win32", "x64"],
+    "minimum_ce_version": "7.0",
+    "supported_os": ["Windows"]
+  },
+
+  "compatibility": {
+    "cheat_engine_versions": ["7.0", "7.1", "7.2", "7.3", "7.4"],
+    "architecture": ["x86", "x64"],
+    "windows_versions": ["7", "8", "8.1", "10", "11"]
+  },
+
+  "build": {
+    "visual_studio": "2022",
+    "platform_toolset": "v143",
+    "configurations": ["Debug", "Release"],
+    "platforms": ["Win32", "x64"],
+    "dependencies": [
+      "lua53-32.lib",
+      "lua53-64.lib",
+      "ws2_32.lib"
+    ]
+  },
+
+  "repository": {
+    "url": "https://github.com/Eruditi/CE-MCP-Plugin",
+    "issues": "https://github.com/Eruditi/CE-MCP-Plugin/issues",
+    "documentation": "https://github.com/Eruditi/CE-MCP-Plugin/blob/main/README.md"
+  }
+}
